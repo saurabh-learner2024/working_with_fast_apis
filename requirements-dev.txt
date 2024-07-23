@@ -1,0 +1,2 @@
+# ruff is a linter, formatter, and import sorting tool that we are going to use for all three things
+ruff
