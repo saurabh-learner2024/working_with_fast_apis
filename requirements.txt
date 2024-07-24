@@ -1,2 +1,10 @@
 fastapi
 uvicorn[standard]
+
+# These are what we will need to talk to a sqlite database asynchronously and for postgresql we can use "asyncpg"
+sqlalchemy
+databases[aiosqlite]
+
+# To read env variable from the .env file we will need to install the python-dotenv library
+python-dotenv
+pydantic-settings
