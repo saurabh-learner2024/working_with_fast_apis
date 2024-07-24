@@ -1,11 +1,13 @@
 # Import necessary libraries for testing
+import os
 from typing import AsyncGenerator, Generator
 
 import pytest  # Pytest is a testing framework for Python
 from fastapi.testclient import TestClient  # TestClient allows interaction with the FastAPI app without starting the server
 from httpx import AsyncClient, ASGITransport  # AsyncClient and ASGITransport are used to make async requests to our API
+os.environ["ENV_STATE"] = "test"
+from storeapi.database import database
 from storeapi.main import app  # Import the FastAPI app
-from storeapi.routers.post import comment_table, post_table  # Import the tables used in the app
 
 # Fixture to set the async backend to "asyncio" for the test session
 @pytest.fixture(scope="session")
@@ -20,9 +22,9 @@ def client() -> Generator:
 # Fixture to clear the post and comment tables before each test
 @pytest.fixture(autouse=True)  # This fixture will run automatically before every test
 async def db() -> AsyncGenerator:
-    post_table.clear()  # Clear the post_table to ensure a clean state for each test
-    comment_table.clear()  # Clear the comment_table similarly
+    await database.connect()
     yield  # Yield control back to the test
+    await database.disconnect()
 
 # Fixture to create an asynchronous client for making async requests
 @pytest.fixture()
