@@ -14,6 +14,7 @@ class BaseConfig(BaseSettings):
 class GlobalConfig(BaseConfig):
     DATABASE_URL: Optional[str] = None  # Database connection URL
     DB_FORCE_ROLL_BACK: bool = False  # Flag for rolling back database transactions
+    LOGTAIL_API_KEY : Optional[str] = None
 
 
 # Development configuration class inheriting from GlobalConfig
