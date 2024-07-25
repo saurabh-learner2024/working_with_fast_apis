@@ -8,3 +8,7 @@ databases[aiosqlite]
 # To read env variable from the .env file we will need to install the python-dotenv library
 python-dotenv
 pydantic-settings
+
+rich
+asgi-correlation-id
+python-json-logger
