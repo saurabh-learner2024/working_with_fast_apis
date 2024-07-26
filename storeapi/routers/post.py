@@ -1,5 +1,7 @@
 import logging
-from fastapi import APIRouter, HTTPException, Request
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Request, Depends
 from storeapi.database import comment_table, post_table, database
 from storeapi.models.post import UserPost, UserPostIn, Comment, CommentIn, UserPostWithComments
 from storeapi.models.user import User
@@ -26,10 +28,9 @@ async def find_post(post_id: int):
 # are waiting for the database to respond our request or things like that then those functions can run
 # in parallel more or less.So that is where we get a speed benefit when we use fastapi and async function
 @router.post("/post", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn, request: Request):
+async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(get_current_user)]):
     logger.info("Creating Post")
-    current_user: User =await get_current_user(await oauth2_scheme(request))
-    data = post.model_dump()
+    data = {**post.model_dump(), "user_id": current_user.id}
     query = post_table.insert().values(data)
     logger.debug(query)
     last_record_id = await database.execute(query)
@@ -45,13 +46,12 @@ async def get_all_posts():
 
 
 @router.post("/comment", response_model=Comment, status_code=201)
-async def create_comment(comment: CommentIn, request: Request):
+async def create_comment(comment: CommentIn, current_user: Annotated[User, Depends(get_current_user)]):
     logger.info("Creating comment")
-    current_user: User =await get_current_user(await oauth2_scheme(request))
     post = await find_post(comment.post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    data = comment.model_dump()
+    data = {**comment.model_dump(), "user_id": current_user.id}
     query = comment_table.insert().values(data)
     logger.debug(query, extra={"email": "saurabh.jaiswal@net"})
     last_record_id = await database.execute(query)

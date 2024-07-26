@@ -29,7 +29,7 @@ class ProdConfig(GlobalConfig):
 
 # Test configuration class inheriting from GlobalConfig
 class TestConfig(GlobalConfig):
-    DATABASE_URL: str = "sqlite:///test.db"  # Default database URL for testing
+    DATABASE_URL: str = "sqlite:///test1.db"  # Default database URL for testing
     DB_FORCE_ROLL_BACK: bool = True  # Enable rollbacks for testing environment
     model_config = SettingsConfigDict(env_prefix="TEST_")  # Prefix for testing environment variables
 

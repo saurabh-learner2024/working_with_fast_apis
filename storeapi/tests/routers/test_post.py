@@ -38,7 +38,7 @@ async def created_comment(async_client: AsyncClient, created_post: dict, logged_
 
 # Test to check if a post can be created successfully
 @pytest.mark.anyio  # Marks this test as an async test using the anyio plugin
-async def test_create_post(async_client: AsyncClient, logged_in_token: str):
+async def test_create_post(async_client: AsyncClient, registered_user: dict, logged_in_token: str):
     body = "Test Post"
     # Send a POST request to create a new post with the specified body content
     response = await async_client.post(
@@ -48,7 +48,7 @@ async def test_create_post(async_client: AsyncClient, logged_in_token: str):
     # Assert that the response status code is 201 (Created), indicating success
     assert response.status_code == 201
     # Assert that the response contains the correct post data
-    assert {"id": 1, "body": body}.items() <= response.json().items()
+    assert {"id": 1, "body": body, "user_id": registered_user["id"]}.items() <= response.json().items()
 
 
 @pytest.mark.anyio
@@ -89,7 +89,7 @@ async def test_get_all_posts(async_client: AsyncClient, created_post: dict):
 
 # Test to check if a comment can be created successfully
 @pytest.mark.anyio  # Marks this test as an async test using the anyio plugin
-async def test_create_comment(async_client: AsyncClient, created_post: dict, logged_in_token: str):
+async def test_create_comment(async_client: AsyncClient, created_post: dict, registered_user: dict, logged_in_token: str):
     body = "Test Comment"
     # Send a POST request to create a new comment on the specified post
     response = await async_client.post(
@@ -104,6 +104,7 @@ async def test_create_comment(async_client: AsyncClient, created_post: dict, log
                "id": 1,
                "body": body,
                "post_id": created_post["id"],
+               "user_id": registered_user["id"],
            }.items() <= response.json().items()
 
 

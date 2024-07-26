@@ -10,7 +10,8 @@ post_table = sqlalchemy.Table(
     "posts",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),  # Primary key column
-    sqlalchemy.Column("body", sqlalchemy.String)  # Body column for post content
+    sqlalchemy.Column("body", sqlalchemy.String),  # Body column for post content
+    sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False),
 )
 
 
@@ -29,7 +30,8 @@ comment_table = sqlalchemy.Table(
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),  # Primary key column
     sqlalchemy.Column("body", sqlalchemy.String),  # Body column for comment content
-    sqlalchemy.Column("post_id", sqlalchemy.ForeignKey("posts.id"), nullable=False)  # Foreign key referencing posts table
+    sqlalchemy.Column("post_id", sqlalchemy.ForeignKey("posts.id"), nullable=False),   # Foreign key referencing posts table
+    sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False)
 )
 
 # Create an SQLAlchemy engine using the database URL from the configuration
