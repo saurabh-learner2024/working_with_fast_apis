@@ -13,6 +13,16 @@ post_table = sqlalchemy.Table(
     sqlalchemy.Column("body", sqlalchemy.String)  # Body column for post content
 )
 
+
+user_table = sqlalchemy.Table(
+    "users",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("email", sqlalchemy.String, unique=True),
+    sqlalchemy.Column("password", sqlalchemy.String)
+)
+
+
 # Define the comments table
 comment_table = sqlalchemy.Table(
     "comments",
