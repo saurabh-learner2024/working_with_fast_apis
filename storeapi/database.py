@@ -34,6 +34,16 @@ comment_table = sqlalchemy.Table(
     sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False)
 )
 
+
+like_table = sqlalchemy.Table(
+    "likes",
+    metadata,
+ sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),  # Primary key column
+    sqlalchemy.Column("post_id", sqlalchemy.ForeignKey("posts.id"), nullable=False),   # Foreign key referencing posts table
+    sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False)
+)
+
+
 # Create an SQLAlchemy engine using the database URL from the configuration
 engine = sqlalchemy.create_engine(
     config.DATABASE_URL, connect_args={"check_same_thread": False}  # Only relevant for SQLite

@@ -1,4 +1,4 @@
-from pydantic import BaseModel,ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class UserPostIn(BaseModel):
@@ -9,6 +9,11 @@ class UserPost(UserPostIn):
     model_config = ConfigDict(from_attributes=True)
     id: int
     user_id: int
+
+
+class UserPostWithLikes(UserPost):
+    model_config = ConfigDict(from_attributes=True)
+    likes: int
 
 
 class CommentIn(BaseModel):
@@ -22,8 +27,17 @@ class Comment(CommentIn):
     user_id: int
 
 
+class PostLikeIn(BaseModel):
+    post_id: int
+
+
+class PostLike(PostLikeIn):
+    id: int
+    user_id: int
+
+
 class UserPostWithComments(BaseModel):
-    post: UserPost
+    post: UserPostWithLikes
     comments: list[Comment]
 
 # {"post": {"id": 0, "body": "My post"}, "comments": [{"id": 2, "post_id":0, "body": "My comment"}]}
