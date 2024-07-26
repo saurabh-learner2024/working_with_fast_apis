@@ -1,7 +1,10 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from storeapi.database import comment_table, post_table, database
 from storeapi.models.post import UserPost, UserPostIn, Comment, CommentIn, UserPostWithComments
+from storeapi.models.user import User
+from storeapi.security import oauth2_scheme, get_current_user
+
 
 # An API router is basically a fastapi app but instead of running on its own it can be included be included into an existing app.
 # Then it basically lets you see these endpoints in the original app
@@ -23,8 +26,9 @@ async def find_post(post_id: int):
 # are waiting for the database to respond our request or things like that then those functions can run
 # in parallel more or less.So that is where we get a speed benefit when we use fastapi and async function
 @router.post("/post", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn):
+async def create_post(post: UserPostIn, request: Request):
     logger.info("Creating Post")
+    current_user: User =await get_current_user(await oauth2_scheme(request))
     data = post.model_dump()
     query = post_table.insert().values(data)
     logger.debug(query)
@@ -41,8 +45,9 @@ async def get_all_posts():
 
 
 @router.post("/comment", response_model=Comment, status_code=201)
-async def create_comment(comment: CommentIn):
+async def create_comment(comment: CommentIn, request: Request):
     logger.info("Creating comment")
+    current_user: User =await get_current_user(await oauth2_scheme(request))
     post = await find_post(comment.post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")

@@ -1,20 +1,22 @@
 from httpx import AsyncClient  # Import AsyncClient for making async HTTP requests
 import pytest  # Import pytest for writing and running tests
 
+from storeapi import security
+
 
 # Function to create a new post by sending an HTTP POST request to the "/post" endpoint
-async def create_post(body: str, async_client: AsyncClient) -> dict:
+async def create_post(body: str, async_client: AsyncClient, logged_in_token: str) -> dict:
     # Send a POST request to the "/post" endpoint with the given post content
-    response = await async_client.post("/post", json={"body": body})
+    response = await async_client.post("/post", json={"body": body}, headers={"Authorization": f"Bearer {logged_in_token}"})
     # Return the JSON response from the server, which includes the post details
     return response.json()
 
 
 # Function to create a new comment by sending an HTTP POST request to the "/comment" endpoint
-async def create_comment(body: str, post_id: int, async_client: AsyncClient) -> dict:
+async def create_comment(body: str, post_id: int, async_client: AsyncClient, logged_in_token: str) -> dict:
     # Send a POST request to the "/comment" endpoint with the given comment content and post ID
     response = await async_client.post(
-        "/comment", json={"body": body, "post_id": post_id}
+        "/comment", json={"body": body, "post_id": post_id},headers={"Authorization": f"Bearer {logged_in_token}"}
     )
     # Return the JSON response from the server, which includes the comment details
     return response.json()
@@ -22,26 +24,26 @@ async def create_comment(body: str, post_id: int, async_client: AsyncClient) -> 
 
 # Fixture to create a post before each test
 @pytest.fixture()
-async def created_post(async_client: AsyncClient):
+async def created_post(async_client: AsyncClient, logged_in_token: str):
     # Use the create_post function to create a post with the body "Test Post"
-    return await create_post("Test Post", async_client)
+    return await create_post("Test Post", async_client, logged_in_token)
 
 
 # Fixture to create a comment before each test
 @pytest.fixture()
-async def created_comment(async_client: AsyncClient, created_post: dict):
+async def created_comment(async_client: AsyncClient, created_post: dict, logged_in_token: str):
     # Use the create_comment function to create a comment for the previously created post
-    return await create_comment("Test Comment", created_post["id"], async_client)
+    return await create_comment("Test Comment", created_post["id"], async_client, logged_in_token)
 
 
 # Test to check if a post can be created successfully
 @pytest.mark.anyio  # Marks this test as an async test using the anyio plugin
-async def test_create_post(async_client: AsyncClient):
+async def test_create_post(async_client: AsyncClient, logged_in_token: str):
     body = "Test Post"
     # Send a POST request to create a new post with the specified body content
     response = await async_client.post(
         "/post",
-        json={"body": body}
+        json={"body": body}, headers={"Authorization": f"Bearer {logged_in_token}"}
     )
     # Assert that the response status code is 201 (Created), indicating success
     assert response.status_code == 201
@@ -49,11 +51,27 @@ async def test_create_post(async_client: AsyncClient):
     assert {"id": 1, "body": body}.items() <= response.json().items()
 
 
+@pytest.mark.anyio
+async def test_create_post_expired_token(
+        async_client: AsyncClient, registered_user: dict, mocker):
+    mocker.patch("storeapi.security.access_token_expire_minutes", return_value=-1)
+    token = security.create_access_token(registered_user["email"])
+    response = await async_client.post(
+        "/post",
+        json={"body": "Test Post"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 401
+    assert "Token has expired" in response.json()["detail"]
+
+
+
+
 # Test to check the behavior when creating a post with missing data
 @pytest.mark.anyio  # Marks this test as an async test using the anyio plugin
-async def test_create_post_missing_data(async_client: AsyncClient):
+async def test_create_post_missing_data(async_client: AsyncClient, logged_in_token: str):
     # Send a POST request to create a new post with no data
-    response = await async_client.post("/post", json={})
+    response = await async_client.post("/post", json={}, headers={"Authorization": f"Bearer {logged_in_token}"})
     # Assert that the response status code is 422 (Unprocessable Entity), indicating a validation error
     assert response.status_code == 422
 
@@ -71,12 +89,13 @@ async def test_get_all_posts(async_client: AsyncClient, created_post: dict):
 
 # Test to check if a comment can be created successfully
 @pytest.mark.anyio  # Marks this test as an async test using the anyio plugin
-async def test_create_comment(async_client: AsyncClient, created_post: dict):
+async def test_create_comment(async_client: AsyncClient, created_post: dict, logged_in_token: str):
     body = "Test Comment"
     # Send a POST request to create a new comment on the specified post
     response = await async_client.post(
         "/comment",
-        json={"body": body, "post_id": created_post["id"]}
+        json={"body": body, "post_id": created_post["id"]},
+        headers={"Authorization": f"Bearer {logged_in_token}"}
     )
     # Assert that the response status code is 201 (Created), indicating success
     assert response.status_code == 201
