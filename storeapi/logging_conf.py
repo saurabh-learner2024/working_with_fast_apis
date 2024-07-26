@@ -2,13 +2,11 @@ import logging
 from logging.config import dictConfig
 from storeapi.config import DevConfig, config
 
-
 def obfuscated(email: str, obfuscated_length: int) -> str:
     # saurabh.jaiswal@gmail.com  sa*************@gmail.com
     characters = email[:obfuscated_length]
     first, last = email.split("@")
     return characters + ("*" * (len(first) - obfuscated_length)) + "@" + last
-
 
 class EmailObfuscationFilter(logging.Filter):
     def __init__(self, name: str = "", obfuscated_length: int = 2) -> None:
@@ -19,11 +17,6 @@ class EmailObfuscationFilter(logging.Filter):
         if "email" in record.__dict__:
             record.email = obfuscated(record.email, self.obfuscated_length)
         return True
-
-
-handlers = ["default", "rotating_file"]
-if isinstance(config, DevConfig):
-    handlers = ["default", "rotating_file", "logtail"]
 
 
 def configure_logging() -> None:
@@ -84,7 +77,7 @@ def configure_logging() -> None:
             "loggers": {
                 "uvicorn": {"handlers": ["default", "rotating_file"], "level": "INFO"},
                 "storeapi": {
-                    "handlers": handlers,
+                    "handlers": ["default", "rotating_file", "logtail"],
                     "level": "DEBUG" if isinstance(config, DevConfig) else "INFO",
                     "propagate": False
                 },
