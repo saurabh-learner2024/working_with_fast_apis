@@ -12,7 +12,7 @@ pydantic-settings
 rich
 asgi-correlation-id
 python-json-logger
-
+httpx
 logtail-python
 
 python-jose

@@ -1,11 +1,13 @@
 # Import necessary libraries for testing
 import os
 from typing import AsyncGenerator, Generator
+from unittest.mock import Mock, AsyncMock
 
 import pytest  # Pytest is a testing framework for Python
 from fastapi.testclient import \
     TestClient  # TestClient allows interaction with the FastAPI app without starting the server
-from httpx import AsyncClient, ASGITransport  # AsyncClient and ASGITransport are used to make async requests to our API
+from httpx import AsyncClient, ASGITransport, \
+    Response, Request  # AsyncClient and ASGITransport are used to make async requests to our API
 
 os.environ["ENV_STATE"] = "test"
 from storeapi.database import database, user_table
@@ -51,6 +53,26 @@ async def registered_user(async_client: AsyncClient) -> dict:
 
 
 @pytest.fixture()
-async def logged_in_token(async_client: AsyncClient, registered_user: dict) -> str:
-    response = await async_client.post("/token", json=registered_user)
+async def confirmed_user(registered_user: dict) -> dict:
+    query = (
+        user_table.update().where(user_table.c.email == registered_user["email"])
+        .values(confirmed=True)
+    )
+    await database.execute(query)
+    return registered_user
+
+
+@pytest.fixture()
+async def logged_in_token(async_client: AsyncClient, confirmed_user: dict) -> str:
+    response = await async_client.post("/token", json=confirmed_user)
     return response.json()["access_token"]
+
+
+@pytest.fixture(autouse=True)
+def mock_httpx_client(mocker):
+    mocked_client = mocker.patch("storeapi.tasks.httpx.AsyncClient")
+    mocked_sync_client = Mock()
+    response = Response(status_code=200, content="", request=Request("POST", "//"))
+    mocked_sync_client.post = AsyncMock(return_value=response)
+    mocked_client.return_value.__aenter__.return_value = mocked_sync_client
+    return mocked_sync_client
