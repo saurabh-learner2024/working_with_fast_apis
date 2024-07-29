@@ -6,6 +6,7 @@ import pytest
 from httpx import AsyncClient
 import tempfile
 
+
 @pytest.fixture()
 def sample_image(fs) -> pathlib.Path:
     path = (pathlib.Path(__file__).parent / "assets" / "myfile.png").resolve()
@@ -49,21 +50,20 @@ async def call_upload_endpoint(
 
 @pytest.mark.anyio
 async def test_upload_image(
-    async_client: AsyncClient, logged_in_token: str, sample_image: pathlib.Path
+        async_client: AsyncClient, logged_in_token: str, sample_image: pathlib.Path
 ):
     response = await call_upload_endpoint(async_client, logged_in_token, sample_image)
     assert response.status_code == 201
     assert response.json()["file_url"] == "https://fakeurl.com"
 
 
-
 @pytest.mark.anyio
 async def test_temp_file_removed_after_upload(
-    async_client: AsyncClient, logged_in_token:str, sample_image: pathlib.Path, mocker
+        async_client: AsyncClient, logged_in_token: str, sample_image: pathlib.Path, mocker
 ):
     named_temp_file_spy = mocker.spy(tempfile, "NamedTemporaryFile")
     response = await call_upload_endpoint(async_client, logged_in_token, sample_image)
-    assert  response.status_code == 201
+    assert response.status_code == 201
 
     created_temp_file = named_temp_file_spy.spy_return
     assert not os.path.exists(created_temp_file.name)

@@ -59,7 +59,8 @@ async def test_create_post(async_client: AsyncClient, confirmed_user: dict, logg
     # Assert that the response status code is 201 (Created), indicating success
     assert response.status_code == 201
     # Assert that the response contains the correct post data
-    assert {"id": 1, "body": body, "user_id": confirmed_user["id"]}.items() <= response.json().items()
+    assert {"id": 1, "body": body, "user_id": confirmed_user["id"],
+            "image_url": None, }.items() <= response.json().items()
 
 
 @pytest.mark.anyio
