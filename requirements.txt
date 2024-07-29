@@ -19,3 +19,6 @@ python-jose
 python-multipart
 passlib[bcrypt]
 
+aiofiles
+b2sdk
+
